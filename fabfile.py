@@ -224,9 +224,18 @@ def load_new_data():
     create_database()
     maintenance_down()
     
+    
 def create_database(func=run):
     """
     Creates the user and database for this project.
+    """
+    func('echo "CREATE USER %(project_name)s WITH PASSWORD \'%(database_password)s\';" | psql postgres' % env)
+    func('createdb -O %(project_name)s %(project_name)s -T template_postgis' % env)
+    
+    
+def create_local_database(func=run):
+    """
+    Creates the LOCAL user and database for this project.
     """
     func('echo "CREATE USER %(project_name)s WITH PASSWORD \'%(database_password)s\';" | psql -U postgres' % env)
     func('createdb -U postgres -O %(project_name)s %(project_name)s -T template_postgis' % env)
@@ -312,7 +321,7 @@ def bootstrap():
     Local development bootstrap: you should only run this once.
     """    
     
-    create_database(local)
+    create_local_database(local)
    # run('echo "GRANT ALL ON geometry_columns TO  %(project_name)s;" | psql -U postgres -d %(project_name)s' % env) # added
   #  run('echo "GRANT ALL ON geometry_columns TO  %(project_name)s;" | psql -U postgres -d %(project_name)s' % env) # added
     

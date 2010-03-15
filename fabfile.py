@@ -16,7 +16,7 @@ env.env_path = '%(path)s/env' % env
 env.repo_path = '%(path)s/repository' % env
 env.apache_config_path = '/home/newsapps/sites/apache/%(project_name)s' % env
 env.python = 'python2.6'
-env.repository_url = 'your_git_repository_url'
+env.repository_url = 'git://github.com/hampelm/hello_newsroom'
 env.multi_server = False
 env.memcached_server_address = "cache.example.com"
 
@@ -38,8 +38,8 @@ def staging():
     """
     env.settings = 'staging'
     env.user = 'newsapps'
-    env.hosts = ['your-ec2-instance-dns-name.amazonaws.com'] 
-    env.s3_bucket = 'your-bucket-name.s3.amazonaws.com'
+    env.hosts = ['ec2-204-236-197-161.compute-1.amazonaws.com'] 
+    env.s3_bucket = 'd3-test-1.s3.amazonaws.com'
     
 """
 Branches
@@ -222,16 +222,14 @@ def load_new_data():
     pgpool_down()
     destroy_database()
     create_database()
-    load_data()
-    pgpool_up()
     maintenance_down()
     
 def create_database(func=run):
     """
     Creates the user and database for this project.
     """
-    func('echo "CREATE USER %(project_name)s WITH PASSWORD \'%(database_password)s\';" | psql postgres' % env)
-    func('createdb -O %(project_name)s %(project_name)s -T template_postgis' % env)
+    func('echo "CREATE USER %(project_name)s WITH PASSWORD \'%(database_password)s\';" | psql -U postgres' % env)
+    func('createdb -U postgres -O %(project_name)s %(project_name)s -T template_postgis' % env)
     
 def destroy_database(func=run):
     """
@@ -240,8 +238,8 @@ def destroy_database(func=run):
     Will not cause the fab to fail if they do not exist.
     """
     with settings(warn_only=True):
-        func('dropdb %(project_name)s' % env)
-        func('dropuser %(project_name)s' % env)
+        func('dropdb %(project_name)s -U postgres' % env) # added '-U postgres'
+        func('dropuser %(project_name)s  -U postgres' % env) # added '-U postgres'
         
 def load_data():
     """
@@ -313,9 +311,13 @@ def bootstrap():
     """
     Local development bootstrap: you should only run this once.
     """    
+    
     create_database(local)
-    local("sh ./manage syncdb --noinput")
-    local("sh ./manage load_shapefiles")
+   # run('echo "GRANT ALL ON geometry_columns TO  %(project_name)s;" | psql -U postgres -d %(project_name)s' % env) # added
+  #  run('echo "GRANT ALL ON geometry_columns TO  %(project_name)s;" | psql -U postgres -d %(project_name)s' % env) # added
+    
+  #  local("sh ./manage syncdb --noinput")
+   # local("sh ./manage load_shapefiles")
 
 def shiva_local():
     """
